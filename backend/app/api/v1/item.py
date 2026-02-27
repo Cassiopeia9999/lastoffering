@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_db, get_current_user
@@ -12,12 +12,14 @@ from backend.app.schemas.item import ItemOut, ItemListOut, ItemUpdate, ItemStatu
 from backend.app.utils.file_utils import save_upload_image
 from backend.app.services.ai_classifier import classify_image
 from backend.app.services.ai_feature import extract_feature, feature_to_str
+from backend.app.services.auto_match import run_auto_match
 
 router = APIRouter(prefix="/items", tags=["物品"])
 
 
 @router.post("", response_model=ItemOut, status_code=201, summary="发布失物/招领信息")
 async def create_item(
+    background_tasks: BackgroundTasks,
     type: str = Form(..., description="lost=失物 / found=招领"),
     title: str = Form(...),
     description: Optional[str] = Form(None),
@@ -71,6 +73,11 @@ async def create_item(
         image_url=image_url,
         feature_vector=feature_str,
     )
+
+    # 有图片才触发后台自动匹配（无特征向量无法检索）
+    if feature_str:
+        background_tasks.add_task(run_auto_match, item.id, item.type)
+
     return item
 
 
