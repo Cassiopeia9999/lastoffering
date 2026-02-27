@@ -1,24 +1,45 @@
+from datetime import datetime
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
+
 
 class UserRegister(BaseModel):
     username: str
     password: str
     contact: str
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
+
+
+class UserUpdate(BaseModel):
+    contact: Optional[str] = None
+    password: Optional[str] = None
+
 
 class UserOut(BaseModel):
     id: int
     username: str
     contact: str
     is_admin: bool
+    is_active: bool
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminUserOut(UserOut):
+    """管理员视角下的用户信息（含完整字段）"""
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
