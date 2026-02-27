@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.app.api.v1 import api_router
 from backend.app.core.config import settings
 from backend.app.core.database import Base, engine
+import backend.app.models  # noqa: F401 — 确保所有模型注册到 Base.metadata
 
 Base.metadata.create_all(bind=engine)
 
