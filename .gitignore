@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# 虚拟环境
+.env
+.venv
+env/
+venv/
+ENV/
+
+# 环境变量配置文件（含数据库密码等敏感信息）
+.env
+.env.*
+!.env.example
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 日志
+*.log
+logs/
+
+# 上传的图片/媒体文件（体积大，不入库）
+media/
+uploads/
+
+# AI 模型权重文件（体积极大）
+*.pt
+*.pth
+*.onnx
+*.bin
+models/weights/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Alembic 自动生成的版本文件（可选择不忽略）
+# alembic/versions/
