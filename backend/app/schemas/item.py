@@ -10,7 +10,7 @@ class ItemCreate(BaseModel):
     type: str
     title: str
     description: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[str] = None       # 为空时由 AI 自动识别
     location: Optional[str] = None
     happen_time: Optional[datetime] = None
 

@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_db, get_current_user
@@ -9,6 +10,8 @@ from backend.app.models.user import User
 from backend.app.models.item import ITEM_CATEGORIES
 from backend.app.schemas.item import ItemOut, ItemListOut, ItemUpdate, ItemStatusUpdate
 from backend.app.utils.file_utils import save_upload_image
+from backend.app.services.ai_classifier import classify_image
+from backend.app.services.ai_feature import extract_feature, feature_to_str
 
 router = APIRouter(prefix="/items", tags=["物品"])
 
@@ -31,10 +34,24 @@ async def create_item(
         raise HTTPException(status_code=400, detail=f"无效的类别，可选：{ITEM_CATEGORIES}")
 
     image_url = None
+    ai_category = None
+    feature_str = None
+
     if image and image.filename:
         image_url = save_upload_image(image)
 
-    from datetime import datetime
+        # AI 自动识别类别（用户未手动指定时使用 AI 结果）
+        ai_category_result, _ = classify_image(image_url)
+        ai_category = ai_category_result
+
+        # 提取特征向量并序列化存库
+        feature_vec = extract_feature(image_url)
+        if feature_vec:
+            feature_str = feature_to_str(feature_vec)
+
+    # 用户手动指定类别优先，否则使用 AI 识别结果
+    final_category = category if category else ai_category
+
     parsed_time = None
     if happen_time:
         try:
@@ -48,10 +65,11 @@ async def create_item(
         type=type,
         title=title,
         description=description,
-        category=category,
+        category=final_category,
         location=location,
         happen_time=parsed_time,
         image_url=image_url,
+        feature_vector=feature_str,
     )
     return item
 
