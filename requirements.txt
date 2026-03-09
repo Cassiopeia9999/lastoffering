@@ -1,0 +1,27 @@
+# 失物招领系统 - Python 依赖
+# 方式一：快速启动（仅核心依赖，占位模式）
+#   pip install -r requirements-minimal.txt
+# 方式二：完整安装（含 AI 框架，需按环境安装书分步执行以避免冲突）
+#   见 环境安装书.md
+
+# 核心依赖（与 requirements-minimal.txt 一致，版本略固定）
+numpy>=1.21.0,<2
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+pydantic>=2.0.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+PyYAML>=6.0
+python-multipart>=0.0.5
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
+alembic>=1.10.0
+pillow>=10.0.0
+requests>=2.28.0
+python-jose[cryptography]
+passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1
+
+# 以下为可选，用于 AI 功能（安装顺序见环境安装书）
+# torch torchvision  # 特征提取（services/ai_feature）
+# tensorflow        # ai_module（ai_module/predict.py）

@@ -1,0 +1,34 @@
+① 移动电子设备
+英文：mobile_device
+包含：手机、平板
+② 笔记本电脑
+英文：laptop
+③ 耳机
+英文：headphones
+④ 充电器 / 数据线
+英文：charger
+⑤ 包类
+英文：bag
+包含：背包、手提包、钱包
+⑥ 书籍
+英文：book
+⑦ 文具
+英文：stationery
+⑧ 证件
+英文：card
+包含：学生证、身份证、银行卡
+⑨ 钥匙
+英文：keys
+⑩ 眼镜
+英文：glasses
+⑪ 饰品
+英文：accessory
+⑫ 水杯
+英文：bottle
+⑬ 雨伞
+英文：umbrella
+⑭ 衣物
+英文：clothes
+第15类（不训练）
+⑮ 其他
+英文：other

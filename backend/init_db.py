@@ -1,5 +1,5 @@
 from backend.app.core.database import Base, engine
-from backend.app.models import user  # 导入所有模型
+import backend.app.models  # 导入所有模型，确保表被创建
 
 def init_db():
     Base.metadata.create_all(bind=engine)

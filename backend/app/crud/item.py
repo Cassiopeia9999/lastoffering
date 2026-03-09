@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -46,7 +46,7 @@ def get_items(
     category: Optional[str] = None,
     status: Optional[str] = None,
     keyword: Optional[str] = None,
-) -> tuple[List[Item], int]:
+) -> Tuple[List[Item], int]:
     query = db.query(Item).filter(Item.is_deleted == False)
     if type:
         query = query.filter(Item.type == type)
