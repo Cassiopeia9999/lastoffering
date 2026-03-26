@@ -5,6 +5,9 @@ export const apiRegister = (data) => request.post('/users/register', data)
 export const apiLogin = (data) => request.post('/users/login', data)
 export const apiGetMe = () => request.get('/users/me')
 export const apiUpdateMe = (data) => request.put('/users/me', data)
+export const apiUploadAvatar = (formData) => request.post('/users/me/avatar', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+})
 
 // ── 物品 ──────────────────────────────────────────────────
 export const apiGetItems = (params) => request.get('/items', { params })
@@ -26,6 +29,11 @@ export const apiClassifyImage = (formData) => request.post('/search/classify', f
   headers: { 'Content-Type': 'multipart/form-data' }
 })
 
+// ── AI帮写 ────────────────────────────────────────────────
+export const apiGenerateDescription = (formData) => request.post('/ai/generate-description', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+})
+
 // ── 匹配 ──────────────────────────────────────────────────
 export const apiCreateMatch = (data) => request.post('/matches', data)
 export const apiConfirmMatch = (id) => request.patch(`/matches/${id}/confirm`)
@@ -43,6 +51,7 @@ export const apiPostMessage = (itemId, content) => request.post(`/items/${itemId
 // ── 管理员 ────────────────────────────────────────────────
 export const apiAdminGetUsers = (params) => request.get('/admin/users', { params })
 export const apiAdminUpdateUser = (id, data) => request.patch(`/admin/users/${id}`, data)
+export const apiAdminDeleteUser = (id) => request.delete(`/admin/users/${id}`)
 export const apiAdminGetItems = (params) => request.get('/admin/items', { params })
 export const apiAdminDeleteItem = (id) => request.delete(`/admin/items/${id}`)
 export const apiAdminRestoreItem = (id) => request.patch(`/admin/items/${id}/restore`)

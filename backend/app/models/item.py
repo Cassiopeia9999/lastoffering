@@ -6,9 +6,21 @@ from sqlalchemy.orm import relationship
 from backend.app.core.database import Base
 
 ITEM_CATEGORIES = [
-    "电子产品", "证件", "钥匙", "钱包/包", "书籍/文具",
-    "衣物", "眼镜", "雨伞", "水杯/水壶", "运动用品",
-    "首饰/饰品", "其他",
+    "移动电子设备",  # mobile_device: 手机、平板
+    "笔记本电脑",    # laptop
+    "耳机",          # headphones
+    "充电器/数据线", # charger
+    "包类",          # bag: 背包、手提包、钱包
+    "书籍",          # book
+    "文具",          # stationery
+    "证件",          # card: 学生证、身份证、银行卡
+    "钥匙",          # keys
+    "眼镜",          # glasses
+    "饰品",          # accessory
+    "水杯",          # bottle
+    "雨伞",          # umbrella
+    "衣物",          # clothes
+    "其他",          # other
 ]
 
 

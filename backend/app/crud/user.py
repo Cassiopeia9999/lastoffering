@@ -55,6 +55,27 @@ def update_user_password(db: Session, user: User, new_password: str) -> User:
     return user
 
 
+def update_user_profile(db: Session, user: User, data: dict) -> User:
+    """更新用户扩展资料（昵称/签名/真实姓名/学院/班级/邮箱/联系方式/密码）"""
+    field_map = ["contact", "nickname", "real_name", "signature", "college", "class_name", "email"]
+    for field in field_map:
+        if field in data and data[field] is not None:
+            setattr(user, field, data[field])
+    if data.get("password"):
+        user.password_hash = hash_password(data["password"])
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_avatar(db: Session, user: User, avatar_path: str) -> User:
+    """更新用户头像路径"""
+    user.avatar = avatar_path
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def set_user_active(db: Session, user_id: int, is_active: bool) -> Optional[User]:
     user = get_user_by_id(db, user_id)
     if not user:

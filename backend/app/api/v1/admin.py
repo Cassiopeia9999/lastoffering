@@ -47,6 +47,21 @@ def get_user(
     return user
 
 
+@router.delete("/users/{user_id}", status_code=204, summary="删除用户")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    user = crud_user.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    if user.id == current_admin.id:
+        raise HTTPException(status_code=400, detail="不能删除自己的账号")
+    db.delete(user)
+    db.commit()
+
+
 @router.patch("/users/{user_id}", response_model=AdminUserOut, summary="修改用户（启用/禁用/重置密码/设为管理员）")
 def update_user(
     user_id: int,

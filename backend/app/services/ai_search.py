@@ -22,6 +22,11 @@ DEFAULT_TOP_K = 10
 
 def cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
     """计算两个向量的余弦相似度（假设已 L2 归一化，直接点积即可）"""
+    # 检查维度是否匹配
+    if vec_a.shape != vec_b.shape:
+        print(f"[WARNING] 特征维度不匹配: {vec_a.shape} vs {vec_b.shape}, 跳过此项")
+        return 0.0
+    
     norm_a = np.linalg.norm(vec_a)
     norm_b = np.linalg.norm(vec_b)
     if norm_a < 1e-8 or norm_b < 1e-8:

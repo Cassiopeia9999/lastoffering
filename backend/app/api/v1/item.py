@@ -57,9 +57,14 @@ async def create_item(
     parsed_time = None
     if happen_time:
         try:
-            parsed_time = datetime.fromisoformat(happen_time)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="happen_time 格式错误，请使用 ISO 格式")
+            # 尝试多种格式解析
+            from dateutil import parser
+            parsed_time = parser.isoparse(happen_time)
+        except Exception:
+            try:
+                parsed_time = datetime.fromisoformat(happen_time.replace('Z', '+00:00'))
+            except Exception:
+                raise HTTPException(status_code=400, detail=f"happen_time 格式错误: {happen_time}")
 
     item = crud_item.create_item(
         db=db,

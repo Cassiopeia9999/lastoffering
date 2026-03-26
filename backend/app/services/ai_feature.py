@@ -1,62 +1,148 @@
 """
-图像特征提取服务 —— ResNet50 预训练模型
+图像特征提取服务 —— EfficientNet-B0 特征提取
 
 当前状态：占位实现
   - 占位逻辑：返回固定维度的随机单位向量（已归一化），结构与真实输出完全一致
   - 接口不变，后期只需将 USING_PLACEHOLDER 改为 False
+  - 占位模式无需安装 PyTorch
 
 最终实现：
-  - 使用 torchvision 内置 ResNet50，去掉最后的分类层，输出 2048 维特征
+  - 使用 ai_module 训练的 EfficientNet-B0 模型提取 512 维特征
   - 对特征向量做 L2 归一化，保证余弦相似度计算的一致性
-  - 模型权重使用 ImageNet 预训练权重，无需额外下载 .pt 文件
-  - 替换步骤：将 USING_PLACEHOLDER 改为 False 即可，torch/torchvision 已在环境中安装
+  - 需要安装 PyTorch: pip install torch torchvision
 """
 
 import json
 import os
+import sys
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
 
 # ── 切换开关 ──────────────────────────────────────────────
-USING_PLACEHOLDER = True   # 改为 False 后使用真实 ResNet50 模型
-FEATURE_DIM = 2048         # ResNet50 输出维度，占位向量与此保持一致
+USING_PLACEHOLDER = False  # False=使用真实模型, True=使用占位实现
+FEATURE_DIM = 512          # EfficientNet-B0 输出维度
 # ─────────────────────────────────────────────────────────
 
+# 添加 ai_module 到路径
+AI_MODULE_DIR = Path(__file__).parent.parent.parent.parent / "ai_module"
+if str(AI_MODULE_DIR) not in sys.path:
+    sys.path.insert(0, str(AI_MODULE_DIR))
+
+# 全局变量（延迟初始化）
 _model = None
 _transform = None
+_device = None
+_FeatureExtractor = None  # 延迟导入的模型类
+
+
+def _import_torch_modules():
+    """延迟导入 PyTorch 模块（占位模式不需要调用）"""
+    global _FeatureExtractor
+    if _FeatureExtractor is not None:
+        return
+    
+    import torch
+    import torch.nn as nn
+    from torchvision import models
+    
+    class LostItemFeatureExtractor(nn.Module):
+        """特征提取器（与 train.py 一致）"""
+        def __init__(self, feature_dim: int = 512):
+            super().__init__()
+            backbone = models.efficientnet_b0(weights=None)
+            in_features = backbone.classifier[1].in_features
+
+            self.backbone = backbone.features
+            self.pool = backbone.avgpool
+            self.feature_head = nn.Sequential(
+                nn.Linear(in_features, feature_dim),
+                nn.BatchNorm1d(feature_dim),
+                nn.ReLU(inplace=True),
+                nn.Dropout(0.3),
+            )
+
+        def forward(self, x):
+            x = self.backbone(x)
+            x = self.pool(x)
+            x = x.flatten(1)
+            feat = self.feature_head(x)
+            return torch.nn.functional.normalize(feat, p=2, dim=1)
+    
+    _FeatureExtractor = LostItemFeatureExtractor
 
 
 def _load_model():
-    """加载 ResNet50 特征提取模型（去掉分类头，单例）"""
-    global _model, _transform
+    """加载 EfficientNet-B0 特征提取模型（单例）"""
+    global _model, _transform, _device
+    
     if _model is not None:
-        return _model, _transform
+        return _model, _transform, _device
+    
+    # 延迟导入
+    _import_torch_modules()
+    
+    import torch
+    from torchvision import transforms
+    
     try:
-        import torch
-        import torch.nn as nn
-        from torchvision import models, transforms
-
-        weights = models.ResNet50_Weights.IMAGENET1K_V1
-        backbone = models.resnet50(weights=weights)
-        # 去掉最后的全连接分类层，保留特征提取部分
-        _model = nn.Sequential(*list(backbone.children())[:-1])
+        model_dir = AI_MODULE_DIR / "models"
+        
+        # 自动选择最新版本：先找 latest，再找 V2/V1
+        model_path = model_dir / "lost_item_model.pth"
+        meta_path = model_dir / "model_meta.json"
+        
+        if not model_path.exists() or not meta_path.exists():
+            # 尝试 V2
+            model_path = model_dir / "lost_item_model_V2.pth"
+            meta_path = model_dir / "model_meta_V2.json"
+        
+        if not model_path.exists() or not meta_path.exists():
+            # 尝试 V1
+            model_path = model_dir / "lost_item_model_V1.pth"
+            meta_path = model_dir / "model_meta_V1.json"
+        
+        if not model_path.exists() or not meta_path.exists():
+            raise FileNotFoundError(f"模型文件不存在，请确保 ai_module/models/ 目录下有模型文件")
+        
+        # 加载元数据
+        with open(meta_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        
+        feature_dim = meta["feature_dim"]
+        img_size = meta["img_size"]
+        
+        # 加载模型
+        _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        # 加载完整模型权重
+        full_state_dict = torch.load(model_path, map_location=_device)
+        
+        # 创建特征提取器
+        _model = _FeatureExtractor(feature_dim).to(_device)
+        
+        # 提取特征相关权重
+        feature_state = {}
+        for k, v in full_state_dict.items():
+            if k.startswith('backbone.') or k.startswith('pool.') or k.startswith('feature_head.'):
+                feature_state[k] = v
+        
+        _model.load_state_dict(feature_state, strict=False)
         _model.eval()
-
+        
+        # 预处理
         _transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.Resize((img_size, img_size)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            ),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
-        print("[AI] ResNet50 特征提取模型加载成功（ImageNet 预训练权重）")
-        return _model, _transform
+        
+        print(f"[AI] EfficientNet-B0 特征提取模型加载成功，维度：{feature_dim}")
+        return _model, _transform, _device
     except Exception as e:
-        print(f"[AI] ResNet50 加载失败，将使用占位实现: {e}")
-        return None, None
+        print(f"[AI] 特征提取模型加载失败，将使用占位实现: {e}")
+        return None, None, None
 
 
 def _placeholder_extract(image_path: str) -> List[float]:
@@ -86,21 +172,20 @@ def extract_feature(image_path: str) -> Optional[List[float]]:
     if USING_PLACEHOLDER:
         return _placeholder_extract(image_path)
 
-    model, transform = _load_model()
+    model, transform, device = _load_model()
     if model is None:
         return _placeholder_extract(image_path)
+    
+    from PIL import Image
+    import torch
 
     try:
-        import torch
-        from PIL import Image
-
         img = Image.open(image_path).convert("RGB")
-        tensor = transform(img).unsqueeze(0)   # (1, 3, 224, 224)
+        tensor = transform(img).unsqueeze(0).to(device)
 
         with torch.no_grad():
-            feat = model(tensor)               # (1, 2048, 1, 1)
-            feat = feat.squeeze()              # (2048,)
-            feat = feat / (feat.norm() + 1e-8) # L2 归一化
+            feat = model(tensor)               # (1, 512)
+            feat = feat.squeeze()              # (512,)
 
         return feat.cpu().numpy().tolist()
     except Exception as e:

@@ -31,10 +31,10 @@
           <!-- 用户下拉菜单 -->
           <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="32" style="background:#409eff">
-                {{ userStore.username.charAt(0).toUpperCase() }}
+              <el-avatar :size="32" :src="avatarUrl" style="background:#409eff">
+                {{ displayName.charAt(0).toUpperCase() }}
               </el-avatar>
-              <span class="username">{{ userStore.username }}</span>
+              <span class="username">{{ displayName }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
@@ -75,8 +75,16 @@ const userStore = useUserStore()
 const unreadCount = ref(0)
 
 const activeMenu = computed(() => route.path)
+const displayName = computed(() => userStore.userInfo?.nickname || userStore.username)
+const avatarUrl = computed(() => {
+  const av = userStore.userInfo?.avatar
+  if (!av) return ''
+  return av.startsWith('http') ? av : `http://localhost:8000/${av}`
+})
 
 async function loadUnread() {
+  // 未登录时不获取通知
+  if (!userStore.isLoggedIn) return
   try {
     const res = await apiGetNotifications()
     unreadCount.value = res.unread

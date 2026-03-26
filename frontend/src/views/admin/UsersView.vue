@@ -27,7 +27,7 @@
       <el-table-column prop="created_at" label="注册时间" width="160">
         <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openReset(row)">重置密码</el-button>
           <el-button size="small" :type="row.is_active ? 'warning' : 'success'"
@@ -38,6 +38,7 @@
                      @click="toggleAdmin(row)">
             {{ row.is_admin ? '取消管理员' : '设为管理员' }}
           </el-button>
+          <el-button size="small" type="danger" plain @click="openDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -54,18 +55,33 @@
         <el-button type="primary" :loading="opLoading" @click="doReset">确认重置</el-button>
       </template>
     </el-dialog>
+
+    <!-- 删除用户确认弹窗 -->
+    <el-dialog v-model="deleteDialog" title="确认删除用户" width="400px">
+      <div class="delete-confirm">
+        <el-icon size="48" color="#f56c6c"><WarningFilled /></el-icon>
+        <p>确定要删除用户 <strong>{{ currentUser?.username }}</strong> 吗？</p>
+        <p class="warn-text">此操作不可恢复，该用户的所有数据将被永久删除。</p>
+      </div>
+      <template #footer>
+        <el-button @click="deleteDialog = false">取消</el-button>
+        <el-button type="danger" :loading="opLoading" @click="doDelete">确认删除</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { apiAdminGetUsers, apiAdminUpdateUser } from '@/api'
+import { WarningFilled } from '@element-plus/icons-vue'
+import { apiAdminGetUsers, apiAdminUpdateUser, apiAdminDeleteUser } from '@/api'
 
 const users = ref([])
 const loading = ref(false)
 const keyword = ref('')
 const resetDialog = ref(false)
+const deleteDialog = ref(false)
 const newPassword = ref('')
 const opLoading = ref(false)
 const currentUser = ref(null)
@@ -112,9 +128,32 @@ async function doReset() {
   }
 }
 
+function openDelete(row) {
+  currentUser.value = row
+  deleteDialog.value = true
+}
+
+async function doDelete() {
+  opLoading.value = true
+  try {
+    await apiAdminDeleteUser(currentUser.value.id)
+    ElMessage.success(`用户 ${currentUser.value.username} 已删除`)
+    deleteDialog.value = false
+    users.value = users.value.filter(u => u.id !== currentUser.value.id)
+  } finally {
+    opLoading.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
 <style scoped>
 .page-header { display: flex; gap: 10px; margin-bottom: 16px; }
+.delete-confirm {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 12px 0; text-align: center;
+}
+.delete-confirm p { margin: 0; font-size: 15px; color: #303133; }
+.warn-text { font-size: 13px !important; color: #f56c6c !important; }
 </style>

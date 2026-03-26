@@ -18,6 +18,12 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     contact: Optional[str] = None
     password: Optional[str] = None
+    nickname: Optional[str] = None
+    real_name: Optional[str] = None
+    signature: Optional[str] = None
+    college: Optional[str] = None
+    class_name: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserOut(BaseModel):
@@ -26,6 +32,13 @@ class UserOut(BaseModel):
     contact: str
     is_admin: bool
     is_active: bool
+    avatar: Optional[str] = None
+    nickname: Optional[str] = None
+    real_name: Optional[str] = None
+    signature: Optional[str] = None
+    college: Optional[str] = None
+    class_name: Optional[str] = None
+    email: Optional[str] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

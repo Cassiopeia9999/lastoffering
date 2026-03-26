@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_db, get_current_user
@@ -6,6 +6,7 @@ from backend.app.core.security import create_access_token
 from backend.app.crud import user as crud_user
 from backend.app.models.user import User
 from backend.app.schemas.user import UserRegister, UserLogin, UserUpdate, UserOut, Token
+from backend.app.utils.file_utils import save_upload_image
 
 router = APIRouter(prefix="/users", tags=["用户"])
 
@@ -37,11 +38,18 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.put("/me", response_model=UserOut, summary="修改个人信息")
+@router.put("/me", response_model=UserOut, summary="修改个人资料")
 def update_me(payload: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if payload.contact:
-        crud_user.update_user_contact(db, current_user, payload.contact)
-    if payload.password:
-        crud_user.update_user_password(db, current_user, payload.password)
-    db.refresh(current_user)
-    return current_user
+    updated = crud_user.update_user_profile(db, current_user, payload.model_dump(exclude_unset=True))
+    return updated
+
+
+@router.post("/me/avatar", response_model=UserOut, summary="上传/更换头像")
+def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    image_path = save_upload_image(file)
+    updated = crud_user.update_user_avatar(db, current_user, image_path)
+    return updated
