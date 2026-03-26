@@ -1,0 +1,18 @@
+# 系统类别映射
+# 格式: 系统类别ID | 系统类别名 | OpenImages类别 | 描述
+------------------------------------------------------------
+0 | mobile_device | 移动电子设备 | Mobile phone, Tablet computer | 手机、平板
+1 | laptop | 笔记本电脑 | Laptop | 笔记本电脑
+2 | headphones | 耳机 | Headphones | 耳机
+3 | charger | 充电器/数据线 | 需手动收集 | 充电器、数据线
+4 | bag | 包类 | Backpack, Handbag, Briefcase, Suitcase | 背包、手提包、钱包
+5 | book | 书籍 | Book | 书籍
+6 | stationery | 文具 | Pen, Pencil, Scissors, Ruler | 文具
+7 | card | 证件 | 需手动收集 | 学生证、身份证、银行卡
+8 | keys | 钥匙 | 需手动收集 | 钥匙
+9 | glasses | 眼镜 | Glasses, Sunglasses | 眼镜
+10 | accessory | 饰品 | Necklace, Bracelet, Watch, Earrings | 饰品
+11 | bottle | 水杯 | Bottle, Cup, Mug | 水杯、瓶子
+12 | umbrella | 雨伞 | Umbrella | 雨伞
+13 | clothes | 衣物 | Clothing, Shirt, Trousers, Dress, Jacket, Coat | 衣物
+14 | other | 其他 | 需手动收集 | 其他物品（不训练）

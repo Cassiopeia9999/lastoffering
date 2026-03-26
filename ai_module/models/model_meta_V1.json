@@ -1,0 +1,41 @@
+{
+  "version": "V1",
+  "num_classes": 14,
+  "feature_dim": 512,
+  "img_size": 224,
+  "class_to_idx": {
+    "accessory": 0,
+    "bag": 1,
+    "book": 2,
+    "bottle": 3,
+    "card": 4,
+    "charger": 5,
+    "clothes": 6,
+    "glasses": 7,
+    "headphones": 8,
+    "keys": 9,
+    "laptop": 10,
+    "mobile_device": 11,
+    "stationery": 12,
+    "umbrella": 13
+  },
+  "idx_to_class": {
+    "0": "accessory",
+    "1": "bag",
+    "2": "book",
+    "3": "bottle",
+    "4": "card",
+    "5": "charger",
+    "6": "clothes",
+    "7": "glasses",
+    "8": "headphones",
+    "9": "keys",
+    "10": "laptop",
+    "11": "mobile_device",
+    "12": "stationery",
+    "13": "umbrella"
+  },
+  "best_val_acc": 0.9192857142857143,
+  "epochs": 30,
+  "training_time": 2232.741665840149
+}

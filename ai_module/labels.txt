@@ -1,17 +1,27 @@
 Mobile phone
+Tablet computer
 Laptop
 Headphones
-Charger
 Backpack
 Handbag
+Briefcase
+Suitcase
 Book
 Pen
 Pencil case
-Identity document
-Key
+Scissors
 Glasses
+Sunglasses
 Necklace
-Bracelet
+Watch
+Earrings
 Bottle
+Coffee cup
+Mug
 Umbrella
 Clothing
+Shirt
+Trousers
+Dress
+Jacket
+Coat

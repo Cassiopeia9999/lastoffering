@@ -1,0 +1,123 @@
+names:
+  0: Woman
+  1: Glasses
+  2: Sunglasses
+  3: Girl
+  4: Human face
+  5: Microphone
+  6: Dress
+  7: Footwear
+  8: Goggles
+  9: Man
+  10: Sports uniform
+  11: Tree
+  12: Clothing
+  13: Boy
+  14: Dog
+  15: Human hair
+  16: Mammal
+  17: Human eye
+  18: Human beard
+  19: Human arm
+  20: Human hand
+  21: Boat
+  22: Human mouth
+  23: Human body
+  24: Human head
+  25: Human nose
+  26: Jacket
+  27: Office building
+  28: Desk
+  29: Kettle
+  30: Baked goods
+  31: Cake
+  32: Poster
+  33: Suit
+  34: Umbrella
+  35: Food
+  36: Person
+  37: Table
+  38: Human leg
+  39: Laptop
+  40: Building
+  41: House
+  42: Furniture
+  43: Chair
+  44: Drink
+  45: Mug
+  46: Coffee cup
+  47: Bottle
+  48: Wheel
+  49: Car
+  50: Shirt
+  51: Dolphin
+  52: Fish
+  53: Bicycle
+  54: Bicycle wheel
+  55: Tire
+  56: Mobile phone
+  57: Camera
+  58: Fashion accessory
+  59: Coffee table
+  60: Flower
+  61: Musical instrument
+  62: Plant
+  63: Jeans
+  64: Human ear
+  65: Guitar
+  66: Book
+  67: Door
+  68: Land vehicle
+  69: Couch
+  70: Ball
+  71: Balloon
+  72: Beer
+  73: Toy
+  74: Television
+  75: Trousers
+  76: Coat
+  77: Skirt
+  78: Fast food
+  79: Watch
+  80: Cattle
+  81: Bull
+  82: Ruler
+  83: Wine
+  84: Wine glass
+  85: Luggage and bags
+  86: Tie
+  87: Bookcase
+  88: Pastry
+  89: Traffic sign
+  90: Sports equipment
+  91: Hat
+  92: Duck
+  93: Studio couch
+  94: Window blind
+  95: Pillow
+  96: Sofa bed
+  97: Loveseat
+  98: Sculpture
+  99: Backpack
+  100: Motorcycle
+  101: Window
+  102: Picture frame
+  103: Table tennis racket
+  104: Paddle
+  105: Canoe
+  106: Shelf
+  107: Earrings
+  108: Teddy bear
+  109: Dessert
+  110: Bagel
+  111: Doughnut
+  112: Snowman
+  113: Flag
+  114: Tableware
+  115: Animal
+  116: Horse
+  117: Pen
+  118: Panda
+  119: Bed
+path: f:\Last_offering\items\ai_module\datasets\yolo-format
+train: .\images\train\
