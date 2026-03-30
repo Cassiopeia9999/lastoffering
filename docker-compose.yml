@@ -42,6 +42,15 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
     volumes:
       - media_data:/app/media/images
+    # GPU 支持（要求宿主机安装 nvidia-container-toolkit）
+    # 若无 GPU 可删除 deploy 段
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     ports:
       - "8000:8000"      # 可按需注释掉，仅内部访问
     healthcheck:

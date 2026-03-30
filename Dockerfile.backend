@@ -10,10 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# 先安装 PyTorch CPU-only（单独一层，利用 Docker 缓存）
+# 先安装 PyTorch GPU (CUDA 12.1)（单独一层，利用 Docker 缓存）
+# 要求宿主机安装 NVIDIA 驱动 + nvidia-container-toolkit
+# 若宿主机无 GPU，可改为 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir \
     torch torchvision \
-    --index-url https://download.pytorch.org/whl/cpu
+    --index-url https://download.pytorch.org/whl/cu121
 
 # 安装其余 Python 依赖
 COPY requirements.txt .
