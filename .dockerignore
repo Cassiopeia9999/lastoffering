@@ -1,0 +1,44 @@
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 前端依赖与构建产物（由 Dockerfile 内部生成）
+frontend/node_modules/
+frontend/dist/
+
+# 数据集（体积庞大，不打包进镜像）
+ai_module/datasets/
+
+# 环境变量（包含敏感信息，不打包）
+.env
+
+# IDE / 编辑器
+.idea/
+.vscode/
+*.iml
+
+# 开发/测试文件
+test_*.py
+*.http
+items0307/
+docs/
+
+# Git
+.git/
+.gitignore
+
+# 旧数据库文件（用 MySQL 容器）
+lostfound.db
+
+# 日志
+*.log
+logs/
