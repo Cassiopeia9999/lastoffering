@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制项目代码
+# 复制项目代码（build context = 项目根目录）
 COPY backend/ ./backend/
 COPY ai_module/ ./ai_module/
 COPY init_db.py .

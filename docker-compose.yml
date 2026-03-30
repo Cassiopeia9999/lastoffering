@@ -24,7 +24,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: docker/Dockerfile.backend
     container_name: lostfound_backend
     restart: unless-stopped
     depends_on:
@@ -63,7 +63,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: docker/Dockerfile.frontend
     container_name: lostfound_frontend
     restart: unless-stopped
     depends_on:

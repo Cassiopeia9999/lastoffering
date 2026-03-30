@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <title>示例SVG：居中文字</title>
+  <desc>示例SVG，展示居中且足够大的中文文字。</desc>
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .frame { fill: none; stroke: #cccccc; stroke-width: 4; }
+      .label {
+        fill: #111111;
+        font-family: "PingFang SC","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC","Hiragino Sans GB","WenQuanYi Micro Hei",Arial,sans-serif;
+        font-weight: 700;
+        font-size: 96px;
+        text-rendering: geometricPrecision;
+      }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="900"/>
+  <rect class="frame" x="20" y="20" width="1560" height="860" rx="16" ry="16"/>
+
+  <text class="label"
+        x="50%" y="50%"
+        text-anchor="middle"
+        dominant-baseline="middle">
+    保证图片清晰、图中文字足够大
+  </text>
+</svg>
