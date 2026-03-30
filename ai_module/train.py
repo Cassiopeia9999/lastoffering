@@ -283,7 +283,7 @@ def main():
     
     # 同时更新 latest 版本（不带版本号，供推理时默认加载）
     latest_model_path = os.path.join(model_dir, "lost_item_model.pth")
-    latest_meta_path = os.path.join(model_dir, "model_meta_V1.json")
+    latest_meta_path = os.path.join(model_dir, "model_meta.json")  # 固定名称，始终指向最新
     torch.save(model.state_dict(), latest_model_path)
     with open(latest_meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)

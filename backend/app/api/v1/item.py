@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFi
 from sqlalchemy.orm import Session
 
 from backend.app.core.deps import get_db, get_current_user
-from backend.app.crud import item as crud_item
+from backend.app.crud import item as crud_item, message as crud_message
 from backend.app.models.user import User
 from backend.app.models.item import ITEM_CATEGORIES
 from backend.app.schemas.item import ItemOut, ItemListOut, ItemUpdate, ItemStatusUpdate
@@ -92,6 +92,7 @@ def list_items(
     category: Optional[str] = Query(None),
     status: Optional[str] = Query(None, description="pending / matched / closed"),
     keyword: Optional[str] = Query(None, description="标题或描述关键词"),
+    exclude_closed: bool = Query(False, description="是否排除已完成的物品"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -101,6 +102,7 @@ def list_items(
     items, total = crud_item.get_items(
         db, skip=skip, limit=page_size,
         type=type, category=category, status=status, keyword=keyword,
+        exclude_closed=exclude_closed,
     )
     return {"total": total, "items": items}
 
@@ -170,15 +172,75 @@ def update_status(
     return crud_item.update_item_status(db, item, payload.status)
 
 
-@router.delete("/{item_id}", status_code=204, summary="下架物品（软删除）")
+@router.delete("/{item_id}", status_code=204, summary="下架物品")
 def delete_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """下架物品（软删除），物品发布者可以下架"""
     item = crud_item.get_item_by_id(db, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="物品不存在")
     if item.owner_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="无权限操作")
     crud_item.soft_delete_item(db, item)
+
+
+@router.post("/{item_id}/restore", summary="重新上架物品")
+def restore_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """重新上架已下架的物品，只有物品发布者可以操作"""
+    # 需要查询包含已下架的物品
+    from backend.app.models.item import Item
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="物品不存在")
+    if item.owner_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="无权限操作")
+    if not item.is_deleted:
+        raise HTTPException(status_code=400, detail="物品未下架，无需重新上架")
+
+    crud_item.restore_item(db, item)
+    return {"message": "物品已重新上架"}
+
+
+@router.post("/{item_id}/close", summary="手动标记物品为已完成（不可逆）")
+def close_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """手动将物品标记为已完成，状态变为 closed，不可重新上架"""
+    item = crud_item.get_item_by_id(db, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="物品不存在")
+    if item.owner_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="无权限操作")
+    if item.status == "closed":
+        raise HTTPException(status_code=400, detail="物品已是完成状态")
+    crud_item.update_item_status(db, item, "closed")
+    return {"message": "已标记为完成"}
+
+
+@router.delete("/{item_id}/messages/{msg_id}", status_code=204, summary="删除留言")
+def delete_message(
+    item_id: int,
+    msg_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """删除留言，只有留言发送者或物品发布者可以删除"""
+    msg = crud_message.get_message_by_id(db, msg_id)
+    if not msg or msg.item_id != item_id:
+        raise HTTPException(status_code=404, detail="留言不存在")
+    
+    # 检查权限：留言发送者或物品发布者可以删除
+    item = crud_item.get_item_by_id(db, item_id)
+    if msg.sender_id != current_user.id and item.owner_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="无权限删除此留言")
+    
+    crud_message.delete_message(db, msg)

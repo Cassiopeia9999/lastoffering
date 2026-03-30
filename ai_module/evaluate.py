@@ -25,7 +25,7 @@ class EvaluateGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("模型评估工具")
-        self.root.geometry("700x500")
+        self.root.geometry("700x540")
         
         self.ai = None
         self.results = None
@@ -57,10 +57,21 @@ class EvaluateGUI:
         frame_eval = tk.LabelFrame(self.root, text="评估设置", padx=10, pady=10)
         frame_eval.pack(fill="x", padx=20, pady=5)
         
-        tk.Label(frame_eval, text="验证集路径:").grid(row=0, column=0, sticky="w")
-        self.val_path_var = tk.StringVar(value="datasets/classification/val")
+        tk.Label(frame_eval, text="评估集路径:").grid(row=0, column=0, sticky="w")
+        self.val_path_var = tk.StringVar(value="datasets/classification/test")
         tk.Entry(frame_eval, textvariable=self.val_path_var, width=40).grid(row=0, column=1, padx=5)
         tk.Button(frame_eval, text="浏览...", command=self._browse_val_dir).grid(row=0, column=2)
+        
+        # 快捷切换按钮
+        frame_quick = tk.Frame(frame_eval)
+        frame_quick.grid(row=1, column=0, columnspan=3, sticky="w", pady=(4, 0))
+        tk.Label(frame_quick, text="快捷切换:", fg="gray").pack(side="left")
+        tk.Button(frame_quick, text="📋 测试集（推荐）", bg="#e3f2fd",
+                  command=lambda: self.val_path_var.set("datasets/classification/test")).pack(side="left", padx=4)
+        tk.Button(frame_quick, text="📂 验证集", bg="#fff3e0",
+                  command=lambda: self.val_path_var.set("datasets/classification/val")).pack(side="left", padx=4)
+        tk.Label(frame_quick, text="  ⚠️ 建议用测试集（模型从未见过），验证集会高估性能",
+                 fg="#e65100", font=("Microsoft YaHei", 9)).pack(side="left")
         
         # 操作按钮
         frame_btn = tk.Frame(self.root)
@@ -109,8 +120,8 @@ class EvaluateGUI:
         self.combo_version["values"] = versions
     
     def _browse_val_dir(self):
-        """浏览验证集目录"""
-        path = filedialog.askdirectory(title="选择验证集目录")
+        """浏览评估集目录"""
+        path = filedialog.askdirectory(title="选择评估集目录（建议选 test/）")
         if path:
             self.val_path_var.set(path)
     
@@ -147,7 +158,7 @@ class EvaluateGUI:
         
         val_dir = self.val_path_var.get()
         if not os.path.exists(val_dir):
-            messagebox.showerror("错误", f"验证集目录不存在: {val_dir}")
+            messagebox.showerror("错误", f"评估集目录不存在: {val_dir}")
             return
         
         self.btn_eval.config(state="disabled")

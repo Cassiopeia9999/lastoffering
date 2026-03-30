@@ -27,6 +27,7 @@
                 {{ item.type === 'lost' ? '失物' : '招领' }}
               </el-tag>
               <el-tag size="small" :type="statusType(item.status)">{{ statusLabel(item.status) }}</el-tag>
+              <el-tag v-if="item.is_deleted" size="small" type="info">已下架</el-tag>
               <el-tag v-if="item.category" size="small" effect="plain">{{ item.category }}</el-tag>
             </div>
             <div class="my-item-title" @click="router.push(`/items/${item.id}`)">{{ item.title }}</div>
@@ -38,10 +39,23 @@
 
           <div class="my-item-actions">
             <el-button size="small" @click="router.push(`/items/${item.id}`)">查看</el-button>
-            <el-button size="small" @click="router.push(`/publish?edit=${item.id}`)">编辑</el-button>
-            <el-popconfirm title="确认下架此物品？" @confirm="deleteItem(item)">
+            <template v-if="!item.is_deleted && item.status !== 'closed'">
+              <el-button size="small" @click="router.push(`/publish?edit=${item.id}`)">编辑</el-button>
+              <el-button size="small" type="warning" plain @click="offShelf(item)">下架</el-button>
+              <el-popconfirm
+                title="标记完成后无法重新上架，确认吗？"
+                confirm-button-text="确认完成"
+                cancel-button-text="取消"
+                @confirm="markDone(item)">
+                <template #reference>
+                  <el-button size="small" type="success" plain>标记完成</el-button>
+                </template>
+              </el-popconfirm>
+            </template>
+            <el-button v-if="item.is_deleted" size="small" type="success" @click="restore(item)">重新上架</el-button>
+            <el-popconfirm title="确认删除此物品？删除后无法恢复" @confirm="deleteItem(item)">
               <template #reference>
-                <el-button size="small" type="danger" plain>下架</el-button>
+                <el-button size="small" type="danger" plain>删除</el-button>
               </template>
             </el-popconfirm>
           </div>
@@ -54,8 +68,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { apiGetMyItems, apiDeleteItem } from '@/api'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { apiGetMyItems, apiDeleteItem, apiRestoreItem, apiCloseItem } from '@/api'
 
 const router = useRouter()
 const items = ref([])
@@ -66,8 +80,8 @@ const filteredItems = computed(() =>
   tab.value === 'all' ? items.value : items.value.filter(i => i.type === tab.value)
 )
 
-function statusLabel(s) { return { pending: '待认领', matched: '已匹配', closed: '已关闭' }[s] || s }
-function statusType(s) { return { pending: 'warning', matched: 'success', closed: 'info' }[s] || '' }
+function statusLabel(s) { return { pending: '待认领', matched: '已匹配', closed: '已完成' }[s] || s }
+function statusType(s) { return { pending: 'warning', matched: 'info', closed: 'success' }[s] || '' }
 function formatTime(t) {
   return new Date(t).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
@@ -75,7 +89,33 @@ function formatTime(t) {
 async function deleteItem(item) {
   await apiDeleteItem(item.id)
   items.value = items.value.filter(i => i.id !== item.id)
+  ElMessage.success('已删除')
+}
+
+async function offShelf(item) {
+  await apiDeleteItem(item.id)
+  item.is_deleted = true
   ElMessage.success('已下架')
+}
+
+async function restore(item) {
+  try {
+    await apiRestoreItem(item.id)
+    item.is_deleted = false
+    ElMessage.success('已重新上架')
+  } catch (e) {
+    ElMessage.error('重新上架失败')
+  }
+}
+
+async function markDone(item) {
+  try {
+    await apiCloseItem(item.id)
+    item.status = 'closed'
+    ElMessage.success('已标记为完成')
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
 onMounted(async () => {

@@ -16,12 +16,11 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.database import SessionLocal
 from backend.app.crud import item as crud_item
-from backend.app.crud import match as crud_match
 from backend.app.crud import notification as crud_notif
 from backend.app.services.ai_feature import str_to_feature
 from backend.app.services.ai_search import search_similar_items
 
-AUTO_MATCH_THRESHOLD = 0.6   # 自动通知阈值，占位模式下可调低测试
+AUTO_MATCH_THRESHOLD = 0.8   # 自动通知阈值，相似度达到80%才推送
 AUTO_MATCH_TOP_K = 5         # 最多推送几条匹配结果
 
 
@@ -71,17 +70,10 @@ def _do_match(db: Session, item_id: int, item_type: str) -> None:
     print(f"[AutoMatch] item_id={item_id} 找到 {len(results)} 条相似物品，开始推送通知")
 
     for matched_item, similarity in results:
-        # 创建 Match 记录
+        # 自动匹配只发通知提示，不创建正式 Match 记录
+        # 正式 Match 记录只能由用户手动点击"疑似遗失"触发
         if item_type == "found":
-            lost_id, found_id = matched_item.id, item_id
-        else:
-            lost_id, found_id = item_id, matched_item.id
-
-        crud_match.create_match(db, lost_id, found_id, similarity=float(similarity))
-
-        # 给匹配到的物品发布者推送通知
-        if item_type == "found":
-            # 拾得者发布招领 → 通知失物发布者
+            # 拾得者发布招领 → 通知失物发布者去查看
             crud_notif.create_notification(
                 db,
                 user_id=matched_item.owner_id,
@@ -94,7 +86,7 @@ def _do_match(db: Session, item_id: int, item_type: str) -> None:
                 related_item_id=new_item.id,
             )
         else:
-            # 遗失者发布失物 → 通知招领发布者
+            # 遗失者发布失物 → 通知招领发布者去查看
             crud_notif.create_notification(
                 db,
                 user_id=matched_item.owner_id,
@@ -105,6 +97,18 @@ def _do_match(db: Session, item_id: int, item_type: str) -> None:
                     f"相似度：{similarity:.0%}，请前往查看是否为同一物品。"
                 ),
                 related_item_id=new_item.id,
+            )
+            # 同时也通知失主本人：系统发现了可能是你失物的招领信息
+            crud_notif.create_notification(
+                db,
+                user_id=new_item.owner_id,
+                type="match_found",
+                content=(
+                    f"系统发现一条可能与你失物【{new_item.title}】匹配的招领信息！\n"
+                    f"招领物品：【{matched_item.title}】\n"
+                    f"相似度：{similarity:.0%}，请前往查看是否为你的失物。"
+                ),
+                related_item_id=matched_item.id,
             )
 
         print(f"[AutoMatch]   → 已通知 user_id={matched_item.owner_id}，相似度={similarity:.4f}")

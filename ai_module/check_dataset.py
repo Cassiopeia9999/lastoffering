@@ -89,8 +89,7 @@ def check_dataset():
             if main_ok and backup_ok:
                 status = "✅ 完整"
             elif main_ok:
-                status = f"📦 缺备用{BACKUP_TARGET - backup_count}"
-                all_complete = False
+                status = f"📦 备用{backup_count}张"
             elif main_total > 0:
                 status = f"⏳ 缺正式{TARGET_PER_CLASS - main_total}"
                 all_complete = False

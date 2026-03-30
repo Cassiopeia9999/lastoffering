@@ -30,6 +30,9 @@ class ItemStatusUpdate(BaseModel):
 class ItemOwnerOut(BaseModel):
     id: int
     username: str
+    nickname: str | None = None
+    avatar: str | None = None
+    contact: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

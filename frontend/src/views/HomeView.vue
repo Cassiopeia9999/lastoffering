@@ -63,17 +63,16 @@ const stats = ref([
 ])
 
 onMounted(async () => {
-  const [lostRes, foundRes] = await Promise.all([
-    apiGetItems({ type: 'lost', page_size: 4 }),
-    apiGetItems({ type: 'found', page_size: 4 }),
+  const [lostRes, foundRes, closedRes] = await Promise.all([
+    apiGetItems({ type: 'lost', page_size: 4, exclude_closed: true }),
+    apiGetItems({ type: 'found', page_size: 4, exclude_closed: true }),
+    apiGetItems({ status: 'closed', page_size: 1 }),
   ])
   lostItems.value = lostRes.items
   foundItems.value = foundRes.items
   stats.value[0].value = lostRes.total
   stats.value[1].value = foundRes.total
-
-  const allRes = await apiGetItems({ status: 'matched', page_size: 1 })
-  stats.value[2].value = allRes.total
+  stats.value[2].value = closedRes.total
 })
 </script>
 

@@ -40,7 +40,11 @@
                        list-type="picture-card" :on-change="handleImageChange" :show-file-list="false">
               <el-icon><Plus /></el-icon>
             </el-upload>
-            <div v-if="aiCategory" class="ai-hint">
+            <div v-if="aiClassifying" class="ai-hint ai-loading">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              正在识别图片类别，请稍候...
+            </div>
+            <div v-else-if="aiCategory" class="ai-hint">
               <el-icon color="#67c23a"><MagicStick /></el-icon>
               AI 识别类别：<b>{{ aiCategory }}</b>（置信度 {{ (aiConf * 100).toFixed(0) }}%）
               <el-button link size="small" type="primary" @click="reclassifyImage" style="margin-left: 8px;">
@@ -128,6 +132,7 @@ const imagePreview = ref('')
 const aiCategory = ref('')
 const aiConf = ref(0)
 const aiWriting = ref(false)
+const aiClassifying = ref(false)
 const aiTop3 = ref([])  // 保存Top3识别结果
 const aiTop3Index = ref(0)  // 当前使用的候选索引
 
@@ -230,13 +235,15 @@ function confirmCrop() {
     // 调用 AI 识别
     const fd = new FormData()
     fd.append('image', croppedFile)
+    aiClassifying.value = true
+    aiCategory.value = ''
     apiClassifyImage(fd).then(res => {
       aiTop3.value = res.top3 || []
       aiTop3Index.value = 0
       aiCategory.value = res.suggested_category
       aiConf.value = res.confidence
       if (!form.category) form.category = res.suggested_category
-    }).catch(() => {})
+    }).catch(() => {}).finally(() => { aiClassifying.value = false })
   }, 'image/jpeg', 0.9)
 }
 
@@ -251,13 +258,15 @@ function skipCrop() {
   // 调用 AI 识别
   const fd = new FormData()
   fd.append('image', pendingFile.value)
+  aiClassifying.value = true
+  aiCategory.value = ''
   apiClassifyImage(fd).then(res => {
     aiTop3.value = res.top3 || []
     aiTop3Index.value = 0
     aiCategory.value = res.suggested_category
     aiConf.value = res.confidence
     if (!form.category) form.category = res.suggested_category
-  }).catch(() => {})
+  }).catch(() => {}).finally(() => { aiClassifying.value = false })
 }
 
 function handleImageRemove() {
@@ -383,6 +392,13 @@ onMounted(async () => {
 <style scoped>
 .publish-wrap { max-width: 720px; margin: 0 auto; }
 .upload-area { display: flex; flex-direction: column; gap: 8px; }
+.ai-loading {
+  color: #409eff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
 .ai-hint {
   display: flex; align-items: center; gap: 6px;
   font-size: 13px; color: #67c23a; padding: 6px 10px;

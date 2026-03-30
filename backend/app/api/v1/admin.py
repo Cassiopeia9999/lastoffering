@@ -158,6 +158,24 @@ def admin_restore_item(
     return {"message": "物品已恢复"}
 
 
+@router.patch("/items/{item_id}/status", summary="管理员修改物品状态")
+def admin_update_item_status(
+    item_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    status = payload.get("status")
+    if status not in ("pending", "matched", "closed"):
+        raise HTTPException(status_code=400, detail="无效状态，可选：pending / matched / closed")
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="物品不存在")
+    item.status = status
+    db.commit()
+    return {"message": "状态已更新", "status": status}
+
+
 # ── 系统统计 ──────────────────────────────────────────────
 
 @router.get("/stats", response_model=StatsOverview, summary="系统运行统计概览")

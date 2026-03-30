@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.app.models.item import Item
 
@@ -35,7 +35,12 @@ def create_item(
 
 
 def get_item_by_id(db: Session, item_id: int) -> Optional[Item]:
-    return db.query(Item).filter(Item.id == item_id, Item.is_deleted == False).first()
+    return (
+        db.query(Item)
+        .options(joinedload(Item.owner))
+        .filter(Item.id == item_id, Item.is_deleted == False)
+        .first()
+    )
 
 
 def get_items(
@@ -46,6 +51,7 @@ def get_items(
     category: Optional[str] = None,
     status: Optional[str] = None,
     keyword: Optional[str] = None,
+    exclude_closed: bool = False,
 ) -> Tuple[List[Item], int]:
     query = db.query(Item).filter(Item.is_deleted == False)
     if type:
@@ -54,6 +60,9 @@ def get_items(
         query = query.filter(Item.category == category)
     if status:
         query = query.filter(Item.status == status)
+    elif exclude_closed:
+        # 不传 status 时，如果 exclude_closed=True 则排除已完成
+        query = query.filter(Item.status != "closed")
     if keyword:
         query = query.filter(
             Item.title.contains(keyword) | Item.description.contains(keyword)
@@ -63,13 +72,12 @@ def get_items(
     return items, total
 
 
-def get_items_by_owner(db: Session, owner_id: int) -> List[Item]:
-    return (
-        db.query(Item)
-        .filter(Item.owner_id == owner_id, Item.is_deleted == False)
-        .order_by(Item.created_at.desc())
-        .all()
-    )
+def get_items_by_owner(db: Session, owner_id: int, include_deleted: bool = True) -> List[Item]:
+    """获取用户发布的所有物品，默认包括已下架的"""
+    query = db.query(Item).filter(Item.owner_id == owner_id)
+    if not include_deleted:
+        query = query.filter(Item.is_deleted == False)
+    return query.order_by(Item.created_at.desc()).all()
 
 
 def update_item(db: Session, item: Item, **kwargs) -> Item:
@@ -90,6 +98,14 @@ def update_item_status(db: Session, item: Item, status: str) -> Item:
 
 def soft_delete_item(db: Session, item: Item) -> Item:
     item.is_deleted = True
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def restore_item(db: Session, item: Item) -> Item:
+    """重新上架已下架的物品"""
+    item.is_deleted = False
     db.commit()
     db.refresh(item)
     return item

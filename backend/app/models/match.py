@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, Float, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, Float, DateTime, Enum, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from backend.app.core.database import Base
@@ -14,11 +14,13 @@ class Match(Base):
     found_item_id = Column(Integer, ForeignKey("items.id"), nullable=False)
     similarity = Column(Float, nullable=True, comment="余弦相似度（0~1）")
     status = Column(
-        Enum("pending", "confirmed", "rejected"),
+        Enum("pending", "confirmed", "rejected", "completed"),
         default="pending",
         nullable=False,
-        comment="pending=待确认 confirmed=已确认 rejected=已拒绝",
+        comment="pending=待确认 confirmed=已确认 rejected=已拒绝 completed=已完成",
     )
+    lost_owner_confirmed = Column(Boolean, default=False, nullable=False, comment="失物主确认完成")
+    found_owner_confirmed = Column(Boolean, default=False, nullable=False, comment="招领者确认完成")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

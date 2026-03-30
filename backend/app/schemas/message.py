@@ -11,6 +11,8 @@ class MessageCreate(BaseModel):
 class MessageSenderOut(BaseModel):
     id: int
     username: str
+    nickname: str | None = None
+    avatar: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

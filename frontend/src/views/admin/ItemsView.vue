@@ -6,7 +6,12 @@
       <el-select v-model="filterType" placeholder="类型" clearable style="width:110px">
         <el-option label="失物" value="lost" /><el-option label="招领" value="found" />
       </el-select>
-      <el-select v-model="filterDeleted" placeholder="状态" clearable style="width:120px">
+      <el-select v-model="filterStatus" placeholder="状态" clearable style="width:120px">
+        <el-option label="待认领" value="pending" />
+        <el-option label="已匹配" value="matched" />
+        <el-option label="已完成" value="closed" />
+      </el-select>
+      <el-select v-model="filterDeleted" placeholder="上架状态" clearable style="width:120px">
         <el-option label="正常" :value="false" /><el-option label="已下架" :value="true" />
       </el-select>
       <el-button type="primary" @click="load">搜索</el-button>
@@ -24,20 +29,34 @@
       <el-table-column prop="title" label="标题" min-width="140" />
       <el-table-column prop="category" label="类别" width="100" />
       <el-table-column prop="owner_username" label="发布者" width="100" />
-      <el-table-column label="状态" width="90">
+      <el-table-column label="状态" width="110">
         <template #default="{ row }">
           <el-tag v-if="row.is_deleted" type="info" size="small">已下架</el-tag>
-          <el-tag v-else :type="{ pending:'warning', matched:'success', closed:'info' }[row.status]" size="small">
-            {{ { pending:'待认领', matched:'已匹配', closed:'已关闭' }[row.status] }}
+          <el-tag v-else :type="{ pending:'warning', matched:'primary', closed:'success' }[row.status]" size="small">
+            {{ { pending:'待认领', matched:'已匹配', closed:'已完成' }[row.status] }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="发布时间" width="140">
+      <el-table-column label="发布时间" width="130">
         <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="140" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="viewItem(row.id)">查看</el-button>
+          <!-- 修改状态下拉 -->
+          <el-dropdown v-if="!row.is_deleted" size="small" @command="(s) => changeStatus(row, s)" style="margin: 0 4px">
+            <el-button size="small" type="primary" plain>
+              改状态<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="pending" :disabled="row.status === 'pending'">待认领</el-dropdown-item>
+                <el-dropdown-item command="matched" :disabled="row.status === 'matched'">已匹配</el-dropdown-item>
+                <el-dropdown-item command="closed" :disabled="row.status === 'closed'">已完成</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <!-- 下架/恢复 -->
           <el-popconfirm v-if="!row.is_deleted" title="确认下架？" @confirm="deleteItem(row)">
             <template #reference>
               <el-button size="small" type="danger" plain>下架</el-button>
@@ -58,13 +77,14 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { apiAdminGetItems, apiAdminDeleteItem, apiAdminRestoreItem } from '@/api'
+import { apiAdminGetItems, apiAdminDeleteItem, apiAdminRestoreItem, apiAdminUpdateItemStatus } from '@/api'
 
 const router = useRouter()
 const items = ref([])
 const loading = ref(false)
 const keyword = ref('')
 const filterType = ref('')
+const filterStatus = ref('')
 const filterDeleted = ref(undefined)
 const page = ref(1)
 const pageSize = 20
@@ -80,6 +100,7 @@ async function load() {
     const res = await apiAdminGetItems({
       keyword: keyword.value || undefined,
       type: filterType.value || undefined,
+      status: filterStatus.value || undefined,
       is_deleted: filterDeleted.value,
       page: page.value, page_size: pageSize,
     })
@@ -102,6 +123,17 @@ async function restoreItem(row) {
   await apiAdminRestoreItem(row.id)
   row.is_deleted = false
   ElMessage.success('已恢复')
+}
+
+async function changeStatus(row, status) {
+  try {
+    await apiAdminUpdateItemStatus(row.id, status)
+    row.status = status
+    const label = { pending: '待认领', matched: '已匹配', closed: '已完成' }[status]
+    ElMessage.success(`状态已改为：${label}`)
+  } catch (e) {
+    ElMessage.error('状态修改失败')
+  }
 }
 
 onMounted(load)

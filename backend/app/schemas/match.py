@@ -17,6 +17,8 @@ class MatchOut(BaseModel):
     found_item_id: int
     similarity: Optional[float]
     status: str
+    lost_owner_confirmed: bool = False
+    found_owner_confirmed: bool = False
     created_at: datetime
     lost_item: Optional[ItemOut] = None
     found_item: Optional[ItemOut] = None
