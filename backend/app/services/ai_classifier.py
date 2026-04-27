@@ -1,15 +1,14 @@
 """
 物品类别识别服务 —— EfficientNet-B0 分类模型
 
-当前状态：占位实现
-  - 接口与最终版本完全一致，后期只需将 USING_PLACEHOLDER 改为 False
-  - 占位逻辑：对图片文件名/路径做简单规则匹配，模拟返回类别
-  - 占位模式无需安装 PyTorch
+当前状态：真实模型优先，失败时回退到占位实现
+  - 默认使用 ai_module 训练的 EfficientNet-B0 模型进行分类
+  - 若模型文件缺失、推理失败或显式开启占位模式，则回退到规则/随机占位逻辑
+  - 真实模型依赖 PyTorch 与 torchvision
 
-最终实现：
-  - 使用 ai_module 训练的 EfficientNet-B0 模型
-  - 模型权重放在 ai_module/models/lost_item_model_V1.pth
-  - 需要安装 PyTorch: pip install torch torchvision
+模型文件：
+  - 优先读取 ai_module/models/lost_item_model.pth + model_meta.json
+  - 若 latest 文件不存在，则依次回退到 V2、V1
 """
 
 import os

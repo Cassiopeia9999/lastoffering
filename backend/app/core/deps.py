@@ -32,7 +32,17 @@ def get_current_user(
     return user
 
 
+def has_admin_access(user: User) -> bool:
+    return bool(user.is_admin or getattr(user, "is_superadmin", False))
+
+
 def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_admin:
+    if not has_admin_access(current_user):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要管理员权限")
+    return current_user
+
+
+def get_current_superadmin(current_user: User = Depends(get_current_user)) -> User:
+    if not getattr(current_user, "is_superadmin", False):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要超级管理员权限")
     return current_user

@@ -31,6 +31,7 @@ class UserOut(BaseModel):
     username: str
     contact: str
     is_admin: bool
+    is_superadmin: bool
     is_active: bool
     avatar: Optional[str] = None
     nickname: Optional[str] = None
@@ -52,7 +53,6 @@ class Token(BaseModel):
 
 
 class AdminUserOut(UserOut):
-    """管理员视角下的用户信息（含完整字段）"""
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

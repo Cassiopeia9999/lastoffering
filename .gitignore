@@ -71,3 +71,8 @@ ai_module/datasets/open-images-v6-raw/
 ai_module/datasets/temp_crawled/
 ai_module/datasets/yolo-format/images/
 ai_module/datasets/yolo-format/labels/
+ai_module/review_sheets/
+ai_module/models/model_meta*.json
+ai_module/models/training_history*.json
+ai_module/models/training_history*.csv
+docs/typst/main.pdf

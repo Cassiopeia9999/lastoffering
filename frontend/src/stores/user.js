@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { apiLogin, apiGetMe } from '@/api'
+import { computed, ref } from 'vue'
+import { apiGetMe, apiLogin } from '@/api'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -8,7 +8,13 @@ export const useUserStore = defineStore('user', () => {
 
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => userInfo.value?.is_admin === true)
+  const isSuperadmin = computed(() => userInfo.value?.is_superadmin === true)
   const username = computed(() => userInfo.value?.username || '')
+  const roleLabel = computed(() => {
+    if (isSuperadmin.value) return '超级管理员'
+    if (isAdmin.value) return '管理员'
+    return '普通用户'
+  })
 
   async function login(username, password) {
     const res = await apiLogin({ username, password })
@@ -30,5 +36,16 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('user')
   }
 
-  return { token, userInfo, isLoggedIn, isAdmin, username, login, fetchMe, logout }
+  return {
+    token,
+    userInfo,
+    isLoggedIn,
+    isAdmin,
+    isSuperadmin,
+    username,
+    roleLabel,
+    login,
+    fetchMe,
+    logout,
+  }
 })

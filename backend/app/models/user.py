@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 from backend.app.core.database import Base
 
@@ -11,11 +11,11 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(32), unique=True, index=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
-    contact = Column(String(64), nullable=False, comment="联系方式（手机/微信/邮箱）")
+    contact = Column(String(64), nullable=False, comment="联系方式")
     is_admin = Column(Boolean, default=False, nullable=False)
+    is_superadmin = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False, comment="账号是否启用")
 
-    # 扩展资料字段
     avatar = Column(String(256), nullable=True, comment="头像图片路径")
     nickname = Column(String(32), nullable=True, comment="昵称")
     real_name = Column(String(32), nullable=True, comment="真实姓名")

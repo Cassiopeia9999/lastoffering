@@ -1,16 +1,136 @@
 *, *::before, *::after { box-sizing: border-box; }
 
+:root {
+  --primary-color: #409eff;
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --hero-gradient: linear-gradient(135deg, #1a6fc4 0%, #2d8cf0 50%, #74b9ff 100%);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
                'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: #f5f7fa;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   color: #303133;
+  min-height: 100vh;
 }
 
 a { text-decoration: none; }
 
-.el-card { border-radius: 10px !important; }
+/* 卡片基础样式 */
+.el-card {
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: var(--card-shadow) !important;
+  transition: var(--transition-smooth) !important;
+  overflow: hidden;
+}
+
+.el-card:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* 按钮增强 */
+.el-button {
+  border-radius: 8px !important;
+  font-weight: 500;
+  transition: var(--transition-smooth) !important;
+}
+
+.el-button--primary {
+  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%) !important;
+  border: none !important;
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(135deg, #66b1ff 0%, #409eff 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4) !important;
+}
+
+/* 输入框增强 */
+.el-input__wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  transition: var(--transition-smooth) !important;
+}
+
+.el-input__wrapper:hover,
+.el-input__wrapper.is-focus {
+  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.15) !important;
+}
+
+/* 标签增强 */
+.el-tag {
+  border-radius: 6px !important;
+  font-weight: 500;
+  border: none !important;
+}
+
+/* 页面过渡动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 玻璃态效果 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
 
 /* 让主内容区有最大宽度限制 */
 .app-main > * { max-width: 1200px; margin-left: auto; margin-right: auto; }
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c1c1c1, #a1a1a1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a8a8a8, #888);
+}

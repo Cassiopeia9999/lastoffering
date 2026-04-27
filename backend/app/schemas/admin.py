@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,6 +9,7 @@ class AdminUserOut(BaseModel):
     username: str
     contact: str
     is_admin: bool
+    is_superadmin: bool
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -19,6 +20,7 @@ class AdminUserOut(BaseModel):
 class AdminUserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
+    is_superadmin: Optional[bool] = None
     new_password: Optional[str] = None
 
 

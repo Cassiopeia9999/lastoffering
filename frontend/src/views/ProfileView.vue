@@ -215,27 +215,128 @@ onMounted(() => userStore.fetchMe())
 </script>
 
 <style scoped>
-.profile-wrap { padding: 20px 0; }
-.profile-card { max-width: 760px; margin: 0 auto; }
-.profile-header {
-  display: flex; align-items: flex-start; gap: 24px;
+.profile-wrap {
+  padding: 12px 0 20px;
 }
-.avatar-block { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; }
-.avatar-img { border: 3px solid #e4e7ed; }
+.profile-card {
+  max-width: 920px;
+  margin: 0 auto;
+  border-radius: 24px;
+  animation: fadeInUp 0.6s ease-out;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 14px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 20%),
+    linear-gradient(135deg, #f8fbff, #fffcf7);
+}
+
+.avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  border: 4px solid #e2e8f0;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
 .profile-meta { flex: 1; }
-.username-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.nickname { font-size: 20px; font-weight: 700; color: #303133; }
-.account-name { font-size: 12px; color: #909399; margin-bottom: 4px; }
-.signature { font-size: 13px; color: #606266; margin-bottom: 4px; }
-.register-time { font-size: 12px; color: #c0c4cc; }
+
+.username-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.nickname {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.account-name {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.signature {
+  font-size: 14px;
+  color: #334155;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.register-time {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
 .header-actions { flex-shrink: 0; }
 
 .info-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+  padding: 8px 6px;
 }
-.info-item { display: flex; flex-direction: column; gap: 4px; }
-.info-label { font-size: 12px; color: #909399; }
-.info-value { font-size: 14px; color: #303133; }
 
-.edit-form { margin-top: 4px; }
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fbff 0%, #fffdf8 100%);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  background: linear-gradient(135deg, #eef5ff 0%, #fffaf2 100%);
+  transform: translateY(-2px);
+}
+
+.info-label {
+  font-size: 13px;
+  color: #909399;
+}
+
+.info-value {
+  font-size: 15px;
+  color: #303133;
+  font-weight: 500;
+}
+
+.edit-form { margin-top: 8px; }
+
+:deep(.el-divider__text) {
+  font-weight: 600;
+  color: #606266;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #606266;
+}
+
+:deep(.el-input__wrapper) {
+  min-height: 42px;
+  border-radius: 14px !important;
+}
+
+:deep(.el-avatar) {
+  background: linear-gradient(135deg, #2563eb 0%, #0f172a 100%) !important;
+}
 </style>

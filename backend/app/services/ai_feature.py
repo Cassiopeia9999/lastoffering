@@ -1,15 +1,15 @@
 """
 图像特征提取服务 —— EfficientNet-B0 特征提取
 
-当前状态：占位实现
-  - 占位逻辑：返回固定维度的随机单位向量（已归一化），结构与真实输出完全一致
-  - 接口不变，后期只需将 USING_PLACEHOLDER 改为 False
-  - 占位模式无需安装 PyTorch
+当前状态：真实模型优先，失败时回退到占位实现
+  - 默认使用 ai_module 训练的 EfficientNet-B0 特征头提取 512 维向量
+  - 输出特征会做 L2 归一化，用于余弦相似度检索
+  - 若模型文件缺失、推理失败或显式开启占位模式，则回退到随机归一化向量
+  - 真实模型依赖 PyTorch 与 torchvision
 
-最终实现：
-  - 使用 ai_module 训练的 EfficientNet-B0 模型提取 512 维特征
-  - 对特征向量做 L2 归一化，保证余弦相似度计算的一致性
-  - 需要安装 PyTorch: pip install torch torchvision
+模型文件：
+  - 优先读取 ai_module/models/lost_item_model.pth + model_meta.json
+  - 若 latest 文件不存在，则依次回退到 V2、V1
 """
 
 import json

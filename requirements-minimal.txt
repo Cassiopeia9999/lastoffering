@@ -1,4 +1,4 @@
-# 最小依赖 - 仅后端运行所需（占位模式，不含 TensorFlow/PyTorch）
+# 最小依赖 - 仅基础后端运行所需（不含 PyTorch、jieba 等扩展 AI 依赖）
 numpy>=1.21.0,<2
 fastapi>=0.100.0
 uvicorn[standard]>=0.20.0

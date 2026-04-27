@@ -12,10 +12,10 @@ api_router.include_router(message.router)
 api_router.include_router(match.router)
 api_router.include_router(admin.router)
 
-# ai_module 依赖 TensorFlow 和模型文件，导入失败时跳过，不影响主流程
+# AI 扩展接口依赖 PyTorch 模型、本地 NLP 组件及可选的大模型配置，导入失败时跳过，不影响主流程
 try:
     from backend.app.api.v1 import ai
-    api_router.include_router(ai.router, prefix="/ai", tags=["AI模块-TensorFlow"])
+    api_router.include_router(ai.router, prefix="/ai", tags=["AI扩展模块"])
 except Exception as e:
     import warnings
-    warnings.warn(f"AI 模块未加载（需 TensorFlow 及模型文件）: {e}", UserWarning)
+    warnings.warn(f"AI 扩展模块未加载（需相关依赖与模型文件）: {e}", UserWarning)

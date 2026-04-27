@@ -1,4 +1,4 @@
-"""
+﻿"""
 模型评估工具 - 带GUI界面
 功能：
   1. 批量评估验证集准确率
@@ -21,6 +21,46 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from predict import LostItemAI
 
 
+def calc_class_metrics(confusion_matrix, categories):
+    """根据混淆矩阵计算每类 precision / recall / f1"""
+    metrics = {}
+    for class_name in categories:
+        tp = confusion_matrix.get(class_name, {}).get(class_name, 0)
+        fp = sum(
+            confusion_matrix.get(other_class, {}).get(class_name, 0)
+            for other_class in categories
+            if other_class != class_name
+        )
+        fn = sum(
+            count
+            for predicted_class, count in confusion_matrix.get(class_name, {}).items()
+            if predicted_class != class_name
+        )
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+
+        metrics[class_name] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+        }
+
+    if not metrics:
+        return metrics, {"precision": 0.0, "recall": 0.0, "f1": 0.0}
+
+    macro = {
+        "precision": sum(item["precision"] for item in metrics.values()) / len(metrics),
+        "recall": sum(item["recall"] for item in metrics.values()) / len(metrics),
+        "f1": sum(item["f1"] for item in metrics.values()) / len(metrics),
+    }
+    return metrics, macro
+
+
 class EvaluateGUI:
     def __init__(self, root):
         self.root = root
@@ -32,6 +72,10 @@ class EvaluateGUI:
         
         self._build_ui()
         self._load_versions()
+
+    def _model_ready(self):
+        """判断当前是否已有可用模型（微调模型或 V0 原型基线）"""
+        return self.ai is not None and (self.ai.model is not None or self.ai.prototype_mode)
     
     def _build_ui(self):
         # 标题
@@ -136,12 +180,12 @@ class EvaluateGUI:
         
         try:
             self.ai = LostItemAI(version=version)
-            if self.ai.model is None:
+            if not self._model_ready():
                 messagebox.showerror("错误", "模型加载失败，请检查模型文件是否存在")
                 self.status_var.set("模型加载失败")
                 return
             
-            info = f"版本: {self.ai.version}, 类别数: {len(self.ai.idx_to_class)}"
+            info = f"版本: {self.ai.version}, 模式: {'V0基线' if self.ai.prototype_mode else '微调模型'}, 类别数: {len(self.ai.idx_to_class)}"
             self.lbl_model_info.config(text=info, fg="green")
             self.status_var.set(f"模型 {self.ai.version} 加载成功")
             messagebox.showinfo("成功", f"模型 {self.ai.version} 加载成功！")
@@ -152,7 +196,7 @@ class EvaluateGUI:
     
     def _start_eval(self):
         """开始评估"""
-        if self.ai is None or self.ai.model is None:
+        if not self._model_ready():
             messagebox.showwarning("警告", "请先加载模型")
             return
         
@@ -251,6 +295,8 @@ class EvaluateGUI:
             return
         
         r = self.results
+        categories = sorted(r['class_total'].keys())
+        class_metrics, macro_metrics = calc_class_metrics(r['confusion_matrix'], categories)
         text = []
         text.append("=" * 60)
         text.append("模型性能评估报告")
@@ -259,15 +305,26 @@ class EvaluateGUI:
         text.append(f"评估时间: {r['timestamp']}")
         text.append("")
         text.append(f"总体准确率: {r['total_correct']}/{r['total_samples']} = {r['total_accuracy']:.2%}")
+        text.append(f"宏平均 Precision: {macro_metrics['precision']:.2%}")
+        text.append(f"宏平均 Recall   : {macro_metrics['recall']:.2%}")
+        text.append(f"宏平均 F1       : {macro_metrics['f1']:.2%}")
         text.append("")
-        text.append("各类别准确率:")
+        text.append("各类别指标:")
         text.append("-" * 60)
         
-        for class_name in sorted(r['class_total'].keys()):
+        for class_name in categories:
             correct = r['class_correct'].get(class_name, 0)
             total = r['class_total'][class_name]
             acc = r['class_accuracy'][class_name]
-            text.append(f"{class_name:20s}: {correct:3d}/{total:3d} = {acc:6.2%}")
+            precision = class_metrics[class_name]["precision"]
+            recall = class_metrics[class_name]["recall"]
+            f1 = class_metrics[class_name]["f1"]
+            text.append(
+                f"{class_name:20s}: Acc={acc:6.2%} | P={precision:6.2%} | R={recall:6.2%} | F1={f1:6.2%} | {correct:3d}/{total:3d}"
+            )
+
+        self.results["class_metrics"] = class_metrics
+        self.results["macro_metrics"] = macro_metrics
         
         if r['errors']:
             text.append("")
@@ -307,3 +364,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

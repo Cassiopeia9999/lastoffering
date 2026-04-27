@@ -13,6 +13,8 @@ const routes = [
       { path: 'items',   name: 'Items',   component: () => import('@/views/ItemListView.vue') },
       { path: 'items/:id', name: 'ItemDetail', component: () => import('@/views/ItemDetailView.vue') },
       { path: 'publish', name: 'Publish', component: () => import('@/views/PublishView.vue') },
+      { path: 'smart-search', name: 'SmartSearch', component: () => import('@/views/SmartSearchView.vue') },
+      { path: 'quick-publish', name: 'QuickPublish', component: () => import('@/views/QuickPublishView.vue') },
       { path: 'search',  name: 'Search',  component: () => import('@/views/SearchView.vue') },
       { path: 'my',      name: 'My',      component: () => import('@/views/MyItemsView.vue') },
       { path: 'notifications', name: 'Notifications', component: () => import('@/views/NotificationsView.vue') },
@@ -25,6 +27,7 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       { path: '',        name: 'AdminDashboard', component: () => import('@/views/admin/DashboardView.vue') },
+      { path: 'ai-insights', name: 'AdminAiInsights', component: () => import('@/views/admin/AiInsightsView.vue') },
       { path: 'users',   name: 'AdminUsers',     component: () => import('@/views/admin/UsersView.vue') },
       { path: 'items',   name: 'AdminItems',     component: () => import('@/views/admin/ItemsView.vue') },
     ]

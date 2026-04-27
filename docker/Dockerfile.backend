@@ -24,7 +24,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制项目代码（build context = 项目根目录）
 COPY backend/ ./backend/
 COPY ai_module/ ./ai_module/
-COPY init_db.py .
 
 # 创建媒体目录（运行时通过 volume 挂载覆盖）
 RUN mkdir -p media/images

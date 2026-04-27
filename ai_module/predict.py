@@ -67,12 +67,35 @@ class LostItemAI:
         self.model_dir = os.path.join(self.base_dir, "models")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = None
+        self.prototype_mode = False
+        self.prototypes = None
+        self.prototype_temperature = 12.0
+        self.backbone = None
+        self.pool = None
         self.idx_to_class = None
         self.img_size = 224
         self.version = version
         self.meta = None
 
         self._load_model(version)
+
+    def _build_pretrained_feature_extractor(self):
+        """加载 ImageNet 预训练 EfficientNet-B0 特征提取器（V0 基线使用）"""
+        backbone = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
+        self.backbone = backbone.features.to(self.device)
+        self.pool = backbone.avgpool.to(self.device)
+        self.backbone.eval()
+        self.pool.eval()
+
+    def _extract_backbone_feature(self, img_path: str):
+        """使用预训练骨干提取 L2 归一化特征"""
+        tensor = self._load_image(img_path)
+        with torch.no_grad():
+            feat = self.backbone(tensor)
+            feat = self.pool(feat)
+            feat = feat.flatten(1)
+            feat = nn.functional.normalize(feat, p=2, dim=1)
+        return feat.squeeze(0).cpu().numpy()
 
     def _load_model(self, version: str = None):
         """加载指定版本的模型，如果没有指定版本且latest不存在，自动寻找可用版本"""
@@ -96,8 +119,8 @@ class LostItemAI:
                     meta_path = os.path.join(self.model_dir, f"model_meta_{version}.json")
                     print(f"[INFO] latest版本不存在，自动加载 {version} 版本")
 
-        if not os.path.exists(model_path) or not os.path.exists(meta_path):
-            print(f"[ERROR] 找不到模型文件: {model_path}")
+        if not os.path.exists(meta_path):
+            print(f"[ERROR] 找不到模型元数据文件: {meta_path}")
             print(f"[ERROR] 请确保模型已训练并保存在 {self.model_dir}")
             return False
 
@@ -106,6 +129,37 @@ class LostItemAI:
 
         self.img_size = self.meta["img_size"]
         self.idx_to_class = {int(k): v for k, v in self.meta["idx_to_class"].items()}
+
+        if self.meta.get("model_type") == "prototype":
+            prototype_path = os.path.join(
+                self.model_dir,
+                self.meta.get("prototype_file", f"class_prototypes_{self.meta.get('version', 'V0')}.npz")
+            )
+            if not os.path.exists(prototype_path):
+                print(f"[ERROR] 找不到 V0 原型文件: {prototype_path}")
+                return False
+
+            data = np.load(prototype_path)
+            self.prototypes = data["prototypes"].astype(np.float32)
+            self.prototype_temperature = float(self.meta.get("temperature", 12.0))
+            self.prototype_mode = True
+            self._build_pretrained_feature_extractor()
+
+            self.transform = transforms.Compose([
+                transforms.Resize((self.img_size, self.img_size)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ])
+
+            self.version = self.meta.get("version", version or "V0")
+            print(f"[INFO] 已加载 V0 预训练基线模型：{self.version}")
+            return True
+
+        if not os.path.exists(model_path):
+            print(f"[ERROR] 找不到模型文件: {model_path}")
+            print(f"[ERROR] 请确保模型已训练并保存在 {self.model_dir}")
+            return False
+
         num_classes = self.meta["num_classes"]
         feature_dim = self.meta["feature_dim"]
 
@@ -161,6 +215,10 @@ class LostItemAI:
         返回：(class_id: str, confidence: float)
         如模型未加载则返回 (None, 0.0)
         """
+        if self.prototype_mode:
+            topk = self.predict_topk(img_path, k=1)
+            return topk[0] if topk else (None, 0.0)
+
         if self.model is None:
             return None, 0.0
 
@@ -178,6 +236,19 @@ class LostItemAI:
         预测 Top-K 类别
         返回：[(class_id, confidence), ...]
         """
+        if self.prototype_mode:
+            feat = self._extract_backbone_feature(img_path)
+            sims = self.prototypes @ feat
+            logits = torch.tensor(sims * self.prototype_temperature, dtype=torch.float32)
+            probs = torch.softmax(logits, dim=0).cpu().numpy()
+            top_idx = np.argsort(probs)[::-1][:min(k, len(probs))]
+
+            results = []
+            for idx in top_idx:
+                class_id = self.idx_to_class.get(int(idx), "unknown")
+                results.append((class_id, round(float(probs[idx]), 4)))
+            return results
+
         if self.model is None:
             return []
 
@@ -195,6 +266,9 @@ class LostItemAI:
 
     def extract_features(self, img_path: str):
         """提取 L2 归一化特征向量"""
+        if self.prototype_mode:
+            return self._extract_backbone_feature(img_path)
+
         if self.model is None:
             return None
 
@@ -284,6 +358,10 @@ class PredictGUI:
     def _init_model(self):
         """初始化模型"""
         self._refresh_models()
+
+    def _model_ready(self):
+        """判断当前是否存在可用模型（微调模型或 V0 原型基线）"""
+        return self.ai is not None and (self.ai.model is not None or self.ai.prototype_mode)
         
     def _refresh_models(self):
         """刷新模型列表"""
@@ -312,7 +390,7 @@ class PredictGUI:
         else:
             self.ai = LostItemAI(version)
         
-        if self.ai.model is not None:
+        if self._model_ready():
             self.result_label.config(text=f"✅ 模型 {self.ai.version} 已就绪")
             # 更新模型信息
             if self.ai.meta:
@@ -363,7 +441,7 @@ class PredictGUI:
 
     def _predict(self):
         """执行预测"""
-        if self.ai is None or self.ai.model is None:
+        if not self._model_ready():
             self.result_label.config(text="❌ 请先加载模型")
             return
         
@@ -429,7 +507,7 @@ def main_cli():
     import sys
 
     ai = LostItemAI()
-    if ai.model is None:
+    if ai.model is None and not ai.prototype_mode:
         sys.exit(0)
 
     test_img = sys.argv[1] if len(sys.argv) > 1 else None

@@ -16,6 +16,10 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    ARK_API_KEY: str = ""
+    ARK_ENDPOINT_ID: str = ""
+    ARK_BASE_URL: str = "https://ark.cn-beijing.volces.com/api/v3"
+
     @property
     def cors_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
